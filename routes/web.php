@@ -17,8 +17,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+
         
 // Routes d'authentification par visage (publiques)
 Route::middleware('guest')->group(function () {
@@ -32,8 +31,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     
     // Dashboard
-    // Route::get('/dashboard', [DashboardController::class, 'index'])
-    //     ->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
     Route::get('/statistics', [DashboardController::class, 'statistics'])
         ->name('statistics');
 

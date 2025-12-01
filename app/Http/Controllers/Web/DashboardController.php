@@ -13,8 +13,10 @@ class DashboardController extends Controller
     public function __construct(
         private FaceAuthService $faceAuthService
     ) {
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
+
+    
 
     /**
      * Afficher le dashboard principal

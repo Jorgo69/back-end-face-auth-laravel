@@ -17,7 +17,7 @@ class FaceAuthController extends Controller
         private FaceAuthService $faceAuthService,
         private ImageService $imageService
     ) {
-        $this->middleware('auth')->except(['showLoginForm', 'loginWithFace']);
+        // $this->middleware('auth')->except(['showLoginForm', 'loginWithFace']);
     }
 
     /**

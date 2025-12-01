@@ -18,7 +18,7 @@ class PersonController extends Controller
         private FaceAuthService $faceAuthService,
         private ImageService $imageService
     ) {
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
 
     /**
