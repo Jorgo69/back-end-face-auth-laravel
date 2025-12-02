@@ -316,6 +316,77 @@ Relance
 `docker run -p 8001:8000 --env-file .env faceauth-laravel:latest`
 
 
+###### Pour arreter les conteneur
+```
+
+Commande **directe**, sans théorie.
+
+### Arrêter le conteneur
+
+```bash
+docker stop a0cd149a005c
+```
+
+(ou par nom)
+
+```bash
+docker stop zen_goodall
+```
+
+---
+
+### Vérifier
+
+```bash
+docker ps
+```
+
+---
+
+### Supprimer le conteneur (optionnel)
+
+```bash
+docker rm a0cd149a005c
+```
+
+ou
+
+```bash
+docker rm zen_goodall
+```
+
+---
+
+### Supprimer l’image (optionnel)
+
+```bash
+docker rmi faceauth-laravel
+```
+
+---
+
+### Forcer arrêt + suppression (en une commande)
+
+```bash
+docker rm -f zen_goodall
+```
+
+---
+
+### Arrêter tout ce qui tourne (si besoin)
+
+```bash
+docker stop $(docker ps -q)
+```
+
+C’est tout.
+
+
+
+
+```
+
+
 # 4. Initialise la base de données
 docker-compose exec laravel php artisan migrate --force
 docker-compose exec laravel php artisan db:seed
