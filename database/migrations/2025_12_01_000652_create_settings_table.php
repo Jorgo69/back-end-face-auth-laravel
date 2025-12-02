@@ -1,21 +1,24 @@
 <?php
+// database/migrations/2025_12_01_000218_create_settings_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // ✅ Les types ENUM sont créés dans create_people_table.php
+        // Pas besoin de les recréer ici
+
         Schema::create('settings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('key')->unique()->comment('Clé de configuration (ex: python_api_url)');
             $table->text('value')->nullable()->comment('Valeur de la configuration');
-            $table->string('type')->default('string')->comment('string|integer|boolean|json');
+            $table->enum('type', ['string', 'integer', 'boolean', 'json'])->default('string')->comment('Type de la valeur');
             $table->string('group')->default('general')->comment('Groupe de paramètres');
             $table->string('label')->comment('Libellé pour l\'interface');
             $table->text('description')->nullable()->comment('Description du paramètre');
@@ -28,7 +31,7 @@ return new class extends Migration
             $table->index('is_public');
         });
         
-        // Insérer les paramètres par défaut
+        // ✅ Insérer les paramètres par défaut
         DB::table('settings')->insert([
             [
                 'id' => (string) Str::uuid(),
@@ -69,11 +72,9 @@ return new class extends Migration
         ]);
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('settings');
+        // Les types ENUM sont supprimés dans create_people_table.php
     }
 };

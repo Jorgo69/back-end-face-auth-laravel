@@ -16,21 +16,64 @@ class FaceAuthService
     public function __construct()
     {
         // Charger depuis la BDD (ou fallback sur .env)
-        $this->apiUrl = Setting::get('python_api_url', config('services.faceauth.url'));
-        $this->timeout = Setting::get('python_api_timeout', config('services.faceauth.timeout'));
+        // $this->apiUrl = Setting::get('python_api_url', config('services.faceauth.url'));
+        $this->apiUrl = rtrim(
+                        Setting::get('python_api_url')
+                        ?? config('services.faceauth.url'),
+                        '/'
+                        );
+        // $this->timeout = Setting::get('python_api_timeout', config('services.faceauth.timeout'));
+        $this->timeout = (int) (Setting::get('python_api_timeout')
+                        ?? config('services.faceauth.timeout'));
+
     }
 
     /**
      * Vérifier la santé de l'API Python
      */
+    // public function checkHealth(): array
+    // {
+    //     try {
+    //         $startTime = microtime(true);
+            
+    //         $response = Http::timeout($this->timeout)
+    //             ->get("{$this->apiUrl}/health");
+            
+    //         $responseTime = (microtime(true) - $startTime) * 1000;
+
+    //         if ($response->successful()) {
+    //             return [
+    //                 'status' => 'online',
+    //                 'data' => $response->json(),
+    //                 'response_time_ms' => round($responseTime, 2),
+    //             ];
+    //         }
+
+    //         return [
+    //             'status' => 'offline',
+    //             'error' => 'API returned non-200 status',
+    //             'response_time_ms' => round($responseTime, 2),
+    //         ];
+
+    //     } catch (\Exception $e) {
+    //         Log::error('FaceAuth Health Check Failed', ['error' => $e->getMessage()]);
+            
+    //         return [
+    //             'status' => 'offline',
+    //             'error' => $e->getMessage(),
+    //         ];
+    //     }
+    // }
     public function checkHealth(): array
     {
         try {
             $startTime = microtime(true);
-            
-            $response = Http::timeout($this->timeout)
+
+            $response = Http::connectTimeout(5)
+                ->timeout(30)
+                ->retry(1, 1000)
                 ->get("{$this->apiUrl}/health");
-            
+
             $responseTime = (microtime(true) - $startTime) * 1000;
 
             if ($response->successful()) {
@@ -43,19 +86,23 @@ class FaceAuthService
 
             return [
                 'status' => 'offline',
-                'error' => 'API returned non-200 status',
-                'response_time_ms' => round($responseTime, 2),
+                'error' => 'HTTP ' . $response->status(),
+                'body' => $response->body(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('FaceAuth Health Check Failed', ['error' => $e->getMessage()]);
-            
+            Log::error('FaceAuth Health Failed', [
+                'error' => $e->getMessage(),
+                'url' => "{$this->apiUrl}/health",
+            ]);
+
             return [
                 'status' => 'offline',
                 'error' => $e->getMessage(),
             ];
         }
     }
+
 
     /**
      * Extraire les features d'un visage
@@ -79,9 +126,9 @@ class FaceAuthService
 
             return [
                 'success' => true,
-                'age' => $data['age'],
-                'gender' => $data['gender'],
-                'embedding' => $data['embedding'],
+                'age' => $data['age'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'embedding' => $data['embedding'] ?? [],
                 'response_time_ms' => round($responseTime, 2),
             ];
 

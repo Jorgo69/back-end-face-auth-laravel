@@ -36,7 +36,8 @@
             @if($pythonApiHealth['status'] === 'online')
                 <div class="mt-4 text-sm text-gray-600">
                     <p>Temps de réponse : <span class="font-medium">{{ number_format($pythonApiHealth['response_time_ms'], 2) }} ms</span></p>
-                    <p>Modèle chargé : <span class="font-medium">{{ $pythonApiHealth['data']['model_loaded'] ? 'Oui' : 'Non' }}</span></p>
+                    <p>Modèle chargé : <span class="font-medium">{{ $pythonApiHealth['data']['model_loaded'] ? 'Oui' : 'Non Modèle en veille ' }}</span></p>
+
                 </div>
             @endif
         </div>

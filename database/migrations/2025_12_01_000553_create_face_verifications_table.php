@@ -1,34 +1,36 @@
 <?php
+// database/migrations/2025_12_01_000217_create_face_verifications_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // ✅ Les types ENUM sont créés dans create_people_table.php
+        // Pas besoin de les recréer ici
+
         Schema::create('face_verifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             
             // Relations
-            $table->foreignUuid('user_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignUuid('person_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('person_id')->nullable()->constrained('people')->onDelete('cascade');
             
             // Type de vérification
             $table->enum('type', [
-                'user_login',        // Connexion utilisateur
-                'person_match',      // Comparaison avec personne
-                'two_images',        // Comparaison de 2 images
-                'enrollment',        // Enregistrement initial
-            ]);
+                'user_login',
+                'person_match',
+                'two_images',
+                'enrollment',
+            ])->default('user_login');
             
             // Résultat
             $table->boolean('match_found')->default(false);
-            $table->string('status')->comment('pending|success|failed|error');
+            $table->string('status')->default('pending')->comment('pending|success|failed|error');
             $table->text('detail')->nullable()->comment('Message de l\'API Python');
             
             // Métadonnées
@@ -51,11 +53,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('face_verifications');
+        // Les types ENUM sont supprimés dans create_people_table.php
     }
 };

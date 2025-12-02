@@ -307,6 +307,15 @@ docker build -t faceauth-laravel:latest .
 # 3. Lance tout (Laravel + Redis + API Python)
 docker-compose up -d
 
+Pour relanacer
+`docker-compose up --build -d`
+
+Relance
+
+`docker build --no-cache -t faceauth-laravel:latest .`
+`docker run -p 8001:8000 --env-file .env faceauth-laravel:latest`
+
+
 # 4. Initialise la base de données
 docker-compose exec laravel php artisan migrate --force
 docker-compose exec laravel php artisan db:seed
