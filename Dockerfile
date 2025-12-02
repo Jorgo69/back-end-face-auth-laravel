@@ -21,19 +21,16 @@ COPY . .
 # Assurez-vous que votre package.json contient bien la commande 'build'
 RUN npm run build
 
+
 # ============================================
 # ⚙️ ÉTAPE 2 : Image de PRODUCTION (PHP)
 # L'image finale, légère, avec seulement ce qui est nécessaire pour l'exécution.
 # ============================================
-
-
-# ============================================
-# ÉTAPE 1 : Image de base PHP 8.2
-# ============================================
 FROM php:8.2-fpm-alpine
 
 # ============================================
-# ÉTAPE 2 : Installer les dépendances système
+# Installer les dépendances système et PHP
+# On regroupe pour optimiser les couches
 # ============================================
 RUN apk add --no-cache \
     curl \
@@ -45,69 +42,55 @@ RUN apk add --no-cache \
     freetype-dev \
     libwebp-dev \
     postgresql-dev \
-    oniguruma-dev
-
-# Dépendances pour PostgreSQL
-RUN apk add --no-cache postgresql-dev
-
-# Dépendances pour GD (image processing)
-RUN apk add --no-cache \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev
-
-# ============================================
-# ÉTAPE 3 : Installer les extensions PHP
-# ============================================
-RUN docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-    --with-webp \
+    oniguruma-dev \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp \
     && docker-php-ext-install \
-    gd \
-    pdo \
-    pdo_pgsql \
-    bcmath
+        gd \
+        pdo \
+        pdo_pgsql \
+        bcmath
 
 # ============================================
-# ÉTAPE 4 : Installer Composer
+# Installer Composer
 # ============================================
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-
 # ============================================
-# ÉTAPE 5 : Configurer le répertoire de travail
+# Configurer le répertoire de travail
 # ============================================
 WORKDIR /app
 
 # ============================================
-# ÉTAPE 6 : Copier les fichiers du projet
+# Copier les fichiers du projet & Assets compilés
 # ============================================
+# Copier le code source de l'hôte
 COPY . .
 
+# Copier les assets compilés depuis l'image 'builder'
+# C'est l'étape CRUCIALE qui résout votre problème de Vite
+COPY --from=builder /app/public/build /app/public/build
+COPY --from=builder /app/node_modules /app/node_modules
+# J'ai ajouté node_modules pour les cas où des binaires sont utilisés (bien que non strictement nécessaire pour l'exécution de Laravel)
 
-# ✅ CRÉATION DES DOSSIERS AVANT COMPOSER
+
+# ============================================
+# Créer les dossiers et définir les permissions
+# On le fait APRÈS le COPY pour que les dossiers existent
+# ============================================
 RUN mkdir -p bootstrap/cache storage \
- && chown -R www-data:www-data bootstrap/cache storage \
+ && chown -R www-data:www-data /app \
  && chmod -R 775 bootstrap/cache storage
 
 # ============================================
-# ÉTAPE 8 : Définir les permissions
-# ============================================
-# RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-
-# ============================================
-# ÉTAPE 7 : Installer les dépendances PHP
+# Installer les dépendances PHP
 # ============================================
 RUN composer install --no-dev --optimize-autoloader
 
 # ============================================
-# ÉTAPE 9 : Exposer le port
+# Commande de démarrage
 # ============================================
 EXPOSE 8000
-
-# ============================================
-# ÉTAPE 10 : Commande de démarrage
-# ============================================
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
